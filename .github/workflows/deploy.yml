@@ -1,38 +1,57 @@
-name: Build Svelte App
+name: Deploy Svelte to GitHub Pages
 
-# This workflow is triggered on every push to any branch.
-on: push
+on:
+  push:
+    branches: ["master"]  # Assuming your default branch is named 'master'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
-
-    # This job runs in an Ubuntu environment.
     runs-on: ubuntu-latest
-
     steps:
-    # Checks out the repository under $GITHUB_WORKSPACE, so the job can access it.
-    - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    # Sets up a Node.js environment with the version specified.
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-    # Cache dependencies to speed up workflows.
-    - name: Cache node modules
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-    # Install npm dependencies.
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    # Build the Svelte project.
-    - name: Build
-      run: npm run build
-      # Add additional arguments if your build command requires them
+      - name: Build Svelte App
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: public  # Replace with your Svelte build output directory if it's different
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
