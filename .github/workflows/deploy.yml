@@ -1,24 +1,47 @@
+name: Svelte CI
 
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
+# This workflow is triggered on pushes to the repository.
+on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
 
-      - name: Install and Build
-        run: |
-          npm install
-          npm run build
-          
-      - name: Deploy to GitHub Pages
-        uses: apiwat59/obs-web
-        with:
-          branch: master
-          folder: public
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Full history for all branches and tags is fetched
+
+    # Use Node.js 16
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # Cache dependencies using the native GitHub Actions cache
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    # Install dependencies
+    - name: Install dependencies
+      run: npm install
+
+    # Run linting
+    - name: Run lint
+      run: npm run lint
+
+    # Run tests (if you have any defined)
+    - name: Run tests
+      run: npm test
+
+    # Build the project
+    - name: Build
+      run: npm run build
+
+    # Add additional steps here for further actions like deployment
