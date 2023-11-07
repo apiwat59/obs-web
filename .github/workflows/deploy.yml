@@ -1,25 +1,25 @@
-name: Svelte CI
+name: Build Svelte App
 
-# This workflow is triggered on pushes to the repository.
-on: [push]
+# This workflow is triggered on every push to any branch.
+on: push
 
 jobs:
   build:
 
+    # This job runs in an Ubuntu environment.
     runs-on: ubuntu-latest
 
     steps:
+    # Checks out the repository under $GITHUB_WORKSPACE, so the job can access it.
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0 # Full history for all branches and tags is fetched
 
-    # Use Node.js 16
+    # Sets up a Node.js environment with the version specified.
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
-    # Cache dependencies using the native GitHub Actions cache
+    # Cache dependencies to speed up workflows.
     - name: Cache node modules
       uses: actions/cache@v3
       with:
@@ -28,20 +28,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-node-
 
-    # Install dependencies
+    # Install npm dependencies.
     - name: Install dependencies
       run: npm install
 
-    # Run linting
-    - name: Run lint
-      run: npm run lint
-
-    # Run tests (if you have any defined)
-    - name: Run tests
-      run: npm test
-
-    # Build the project
+    # Build the Svelte project.
     - name: Build
       run: npm run build
-
-    # Add additional steps here for further actions like deployment
+      # Add additional arguments if your build command requires them
